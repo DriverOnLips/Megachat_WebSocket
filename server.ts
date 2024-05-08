@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { MessageFromFront } from './types/MessageFromFront';
+import { Message } from './types/Message';
 import { generateResponse } from './utils/generateResponse';
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -21,25 +21,12 @@ wss.on('connection', (ws: WebSocket) => {
 
 	// Обработка сообщений от клиента
 	ws.on('message', (message: WebSocket.Data) => {
-		// Преобразование бинарных данных в строку
-		const messageString = message.toString();
-		// Преобразование строки в JSON
-		const messageJson: MessageFromFront = JSON.parse(messageString);
-		// console.log(`Received from a client:`, messageJson);
+		const messageJson: Message = JSON.parse(message.toString());
 
-		// Ответ клиенту
 		wss.clients.forEach((client) => {
 			if (client === ws && client.readyState === WebSocket.OPEN) {
-				const response = generateResponse(messageJson);
-				// Отправка сообщения в формате JSON
-				client.send(JSON.stringify(response));
-			}
-		});
-
-		// Отправка сообщения всем клиентам
-		wss.clients.forEach((client) => {
-			if (client !== ws && client.readyState === WebSocket.OPEN) {
-				// Отправка сообщения в формате JSON
+				client.send(JSON.stringify(generateResponse(messageJson)));
+			} else if (client !== ws && client.readyState === WebSocket.OPEN) {
 				client.send(JSON.stringify(messageJson));
 			}
 		});

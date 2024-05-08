@@ -1,6 +1,8 @@
 {
 	"dependencies": {
+		"arg": "^5.0.2",
 		"express": "^4.19.2",
+		"ts-node": "^10.9.2",
 		"ws": "^8.17.0"
 	},
 	"devDependencies": {

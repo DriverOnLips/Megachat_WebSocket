@@ -1,10 +1,7 @@
-import { MessageFromFront } from '../types/MessageFromFront';
-import { ResponceToFront } from '../types/ResponseToFront';
+import { Message } from '../types/Message';
+import { ResponseToFront } from '../types/ResponseToFront';
 
-export const generateResponse = (from: MessageFromFront): ResponceToFront => ({
+export const generateResponse = (from: Message): ResponseToFront => ({
 	...from,
-	payload: {
-		status: 'ok',
-		message: '',
-	},
+	status: 'ok',
 });
