@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 import { Message } from './types/Message';
 import { generateResponse } from './utils/generateResponse';
+import { sendRequest } from './utils/sendRequest';
 const express = require('express');
 const bodyParser = require('body-parser');
 
@@ -33,6 +34,7 @@ wss.on('connection', (ws: WebSocket) => {
 
 		// Отправка сообщения на server2/front
 		// Здесь должен быть ваш код для отправки сообщения на server2/front
+		sendRequest(messageJson);
 	});
 
 	// Обработка закрытия соединения
@@ -43,8 +45,8 @@ wss.on('connection', (ws: WebSocket) => {
 
 // Обработка POST запросов на эндпоинт /back
 app.post('/back', (req: any, res: any) => {
-	const message = req.body.message;
-	console.log(`Received POST request: ${message}`);
+	const message: Message = req.body;
+	console.log(`Received POST request: ${message.message}`);
 
 	// Отправка сообщения всем клиентам
 	clients.forEach((client) => {
