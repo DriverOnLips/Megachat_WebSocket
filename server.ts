@@ -1,8 +1,8 @@
 import WebSocket from "ws";
+import express from "express";
+import bodyParser from "body-parser";
 import { Message } from "./types/Message";
 import { sendRequest } from "./utils/sendRequest";
-const express = require("express");
-const bodyParser = require("body-parser");
 
 const app = express();
 const server = app.listen(8080, () => {
@@ -12,23 +12,27 @@ const wss = new WebSocket.Server({ server });
 
 app.use(bodyParser.json());
 
-// Хранение всех подключенных клиентов
-let clients = new Set<WebSocket>();
+// Хранение всех подключенных клиентов с их именами
+let clients = new Map<WebSocket, string>();
 
 // Обработка подключений к веб-сокету
 wss.on("connection", (ws: WebSocket) => {
-	clients.add(ws);
-
 	// Обработка сообщений от клиента
 	ws.on("message", (message: WebSocket.Data) => {
 		const messageJson: Message = JSON.parse(message.toString());
 
+		if (messageJson.status === "send") {
+			clients.set(ws, messageJson.username);
+		}
+
 		wss.clients.forEach((client) => {
 			if (client === ws && client.readyState === WebSocket.OPEN) {
 				client.send(JSON.stringify({ ...messageJson, status: "ok" }));
-			} else if (client !== ws && client.readyState === WebSocket.OPEN) {
-				client.send(JSON.stringify({ ...messageJson, status: "ok" }));
 			}
+
+			// else if (client !== ws && client.readyState === WebSocket.OPEN) {
+			// 	client.send(JSON.stringify({ ...messageJson, status: "ok" }));
+			// }
 		});
 
 		// Отправка сообщения на server2/front
@@ -43,13 +47,13 @@ wss.on("connection", (ws: WebSocket) => {
 });
 
 // Обработка POST запросов на эндпоинт /back
-app.post("/back", (req: any, res: any) => {
+app.post("/back", (req: express.Request, res: express.Response) => {
 	const message: Message = req.body;
 	console.log(`Received POST request: ${message.message}`);
 
-	// Отправка сообщения всем клиентам
-	clients.forEach((client) => {
-		if (client.readyState === WebSocket.OPEN) {
+	// Отправка сообщения всем клиентам, кроме указанного пользователя
+	clients.forEach((username, client) => {
+		if (username !== message.username && client.readyState === WebSocket.OPEN) {
 			client.send(JSON.stringify(message));
 		}
 	});
